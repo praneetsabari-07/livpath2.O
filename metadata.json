@@ -1,0 +1,7 @@
+{
+  "name": "LivPath AI",
+  "description": "Voice-first multilingual job-matching, speech-to-form assistant, and Gemini AI skill learning hub for Indian workers.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

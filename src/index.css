@@ -1,0 +1,253 @@
+@import "tailwindcss";
+
+@theme {
+  --color-deep-navy: #12355B;
+  --color-primary-teal: #0F766E;
+  --color-amber-accent: #F59E0B;
+  --color-dark-text: #1F2937;
+  --color-soft-off-white: #F4F6F1;
+
+  --color-primary-container: #12355b;
+  --color-surface: #faf9fd;
+  --color-on-background: #1a1c1e;
+  --color-on-tertiary-fixed: #2d1600;
+  --color-on-secondary-fixed: #00201d;
+  --color-on-tertiary-container: #c9915d;
+  --color-on-primary-fixed-variant: #28486f;
+  --color-surface-container-highest: #e3e2e6;
+  --color-surface-variant: #e3e2e6;
+  --color-background: #faf9fd;
+  --color-surface-container: #eeedf1;
+  --color-on-tertiary-fixed-variant: #663d10;
+  --color-inverse-surface: #2f3033;
+  --color-tertiary-container: #502b00;
+  --color-on-surface-variant: #43474e;
+  --color-tertiary-fixed-dim: #f7ba83;
+  --color-inverse-on-surface: #f1f0f4;
+  --color-secondary-fixed: #9cf2e8;
+  --color-secondary-container: #99efe5;
+  --color-surface-tint: #416088;
+  --color-surface-bright: #faf9fd;
+  --color-secondary-fixed-dim: #80d5cb;
+  --color-on-secondary-fixed-variant: #00504a;
+  --color-on-tertiary: #ffffff;
+  --color-secondary: #006a63;
+  --color-error-container: #ffdad6;
+  --color-outline: #73777f;
+  --color-error: #ba1a1a;
+  --color-primary-fixed: #d3e3ff;
+  --color-surface-container-low: #f4f3f7;
+  --color-on-secondary-container: #006f67;
+  --color-primary: #001f3f;
+  --color-outline-variant: #c3c6cf;
+  --color-inverse-primary: #aac8f6;
+  --color-on-error: #ffffff;
+  --color-surface-dim: #dad9dd;
+  --color-on-secondary: #ffffff;
+  --color-tertiary: #321900;
+  --color-tertiary-fixed: #ffdcbf;
+  --color-surface-container-high: #e8e8eb;
+  --color-on-primary: #ffffff;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-primary-container: #809eca;
+  --color-on-primary-fixed: #001c39;
+  --color-primary-fixed-dim: #aac8f6;
+  --color-on-surface: #1a1c1e;
+  --color-on-error-container: #93000a;
+  --color-glass-stroke: rgba(255, 255, 255, 0.4);
+  
+  --spacing-container-max: 80rem;
+  --spacing-stack-md: 1.5rem;
+  --spacing-margin-mobile: 1rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-stack-sm: 0.75rem;
+  --spacing-stack-lg: 3rem;
+  --spacing-margin-desktop: 3rem;
+  --spacing-base: 0.5rem;
+
+  --font-label-sm: Inter;
+  --font-label-md: Inter;
+  --font-body-lg: Inter;
+  --font-body-md: Inter;
+  --font-headline-md: Inter;
+  --font-display-lg-mobile: Inter;
+  --font-headline-lg: Inter;
+  --font-display-lg: Inter;
+
+  /* Since v4 doesn't do fontSize arrays directly in theme cleanly without custom plugin, 
+     I will use utility classes for typography or map them as text variables */
+}
+
+@utility text-label-sm {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+}
+@utility text-label-md {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+}
+@utility text-body-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 400;
+}
+@utility text-body-md {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 400;
+}
+@utility text-headline-md {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+}
+@utility text-display-lg-mobile {
+  font-size: 2.25rem;
+  line-height: 2.75rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+@utility text-headline-lg {
+  font-size: 2rem;
+  line-height: 2.5rem;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+@utility text-headline-sm {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+}
+@utility font-headline-sm {
+  font-family: Inter;
+}
+@utility text-display-lg {
+  font-size: 3rem;
+  line-height: 3.5rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+html {
+  font-size: 16px;
+  color-scheme: light;
+  background-color: #F8FAFC;
+}
+
+body {
+  margin: 0;
+  background-color: #F8FAFC;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.pulse-ring {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .5; transform: scale(1.05); }
+}
+.dotted-path {
+    stroke-dasharray: 4 6;
+    animation: dash 30s linear infinite;
+}
+@keyframes dash {
+    to { stroke-dashoffset: 1000; }
+}
+.glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+.organic-wave {
+    clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 100%);
+}
+
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    opacity: 0.4;
+    z-index: 0;
+}
+
+.bg-soft-gradient {
+    background: linear-gradient(135deg, rgba(200, 240, 235, 0.3) 0%, rgba(220, 230, 240, 0.2) 30%, rgba(230, 250, 240, 0.4) 60%, rgba(210, 230, 255, 0.3) 100%);
+}
+
+@keyframes pulse-ring {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    100% { transform: scale(2.5); opacity: 0; }
+}
+.animate-pulse-ring::before,
+.animate-pulse-ring::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    border-radius: 50%;
+    border: 2px solid #0F766E;
+    animation: pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+.animate-pulse-ring::after {
+    animation-delay: 1.5s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+}
+.animate-float {
+    animation: float 10s ease-in-out infinite;
+}
+.animate-float-delayed {
+    animation: float 12s ease-in-out infinite;
+    animation-delay: 2s;
+}
+
+.bg-f4f6f1 { background-color: #F4F6F1; }
+
+.bg-dots {
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+.ambient-shadow {
+    box-shadow: 0 10px 40px -10px rgba(18, 53, 91, 0.08);
+}
+
+@keyframes ripple {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(2.4); opacity: 0; }
+}
+.animate-ripple {
+    animation: ripple 1.5s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* --- Global footer (BottomWaves) --- */
+@keyframes footer-drift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-48px); }
+}
+.footer-drift {
+    animation: footer-drift 22s ease-in-out infinite alternate;
+}
+.footer-node {
+    animation: pulse 5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+    .footer-drift,
+    .footer-node {
+        animation: none !important;
+    }
+}
