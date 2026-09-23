@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SupportedLanguage, LanguageInfo } from '../types';
 import { SUPPORTED_LANGUAGES, TRANSLATIONS } from '../data/translations';
+import { translations as legacyTranslations } from '../translations';
 
 interface LanguageContextType {
   language: SupportedLanguage;
@@ -17,7 +18,7 @@ const STORAGE_KEY = 'livpath_language_preference';
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<SupportedLanguage>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('livpath-language-selected');
       if (saved && SUPPORTED_LANGUAGES.some(l => l.code === saved)) {
         return saved as SupportedLanguage;
       }
@@ -31,6 +32,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLanguageState(newLang);
     try {
       localStorage.setItem(STORAGE_KEY, newLang);
+      localStorage.setItem('livpath-language-selected', newLang);
       document.documentElement.lang = newLang;
     } catch (e) {
       console.warn('Could not save language preference:', e);
@@ -44,11 +46,17 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const languageInfo = SUPPORTED_LANGUAGES.find(l => l.code === language) || SUPPORTED_LANGUAGES[0];
 
   const t = (key: string, fallback?: string): string => {
+    // 1. Try TRANSLATIONS dictionary
     const langDict = TRANSLATIONS[language];
     if (langDict && langDict[key]) {
       return langDict[key];
     }
-    // Fallback to English dictionary if key missing in current language
+    // 2. Try legacy translations dictionary
+    const legacyDict = (legacyTranslations as any)?.[language] || (legacyTranslations as any)?.en;
+    if (legacyDict && legacyDict[key]) {
+      return legacyDict[key];
+    }
+    // 3. Fallback to English dictionary
     const enDict = TRANSLATIONS['en'];
     if (enDict && enDict[key]) {
       return enDict[key];
@@ -78,3 +86,5 @@ export const useLanguage = (): LanguageContextType => {
   }
   return context;
 };
+
+export const useLanguageContext = useLanguage;

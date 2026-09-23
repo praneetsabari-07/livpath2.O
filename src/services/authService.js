@@ -80,6 +80,18 @@ export const verifyOTP = async (phoneData, otp) => {
   throw new Error('Invalid OTP code. Please check the code sent to your phone or use 123456.');
 };
 
+import { lookupUserInSheet } from './sheetDbService';
+
 export const checkUser = async (phoneNumber) => {
-  return { isExistingUser: false };
+  try {
+    const rawNumber = typeof phoneNumber === 'object' ? phoneNumber?.number : phoneNumber;
+    const result = await lookupUserInSheet(rawNumber);
+    if (result.exists && result.user) {
+      return { isExistingUser: true, user: result.user };
+    }
+  } catch (err) {
+    console.warn('SheetDB checkUser error:', err);
+  }
+  return { isExistingUser: false, user: null };
 };
+

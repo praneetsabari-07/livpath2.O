@@ -35,7 +35,12 @@ const MainApp: React.FC = () => {
   const renderOnboardingStep = () => {
     switch (onboardingStep) {
       case 'phone':
-        return <PhoneOtpStep onSuccess={() => setOnboardingStep('certificate')} />;
+        return (
+          <PhoneOtpStep
+            onSuccess={() => setOnboardingStep('certificate')}
+            onDirectDashboard={() => setCurrentView('jobs')}
+          />
+        );
       case 'certificate':
         return (
           <CertificateStep

@@ -53,6 +53,8 @@ export interface UserProfile {
   certificateVerified: boolean;
   certificateType?: string;
   verifiedAt?: string;
+  lang?: string;
+  language?: string;
 }
 
 export interface JobBadge {

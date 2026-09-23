@@ -1,4 +1,5 @@
 import { createContext, useState, useContext, useEffect } from 'react';
+import { saveUserToSheet } from '../services/sheetDbService';
 
 const AuthContext = createContext();
 
@@ -164,7 +165,9 @@ export function AuthProvider({ children }) {
         },
         jobPreferences: {
           ...(current.jobPreferences || {}),
-          skills: updates.skills || current.jobPreferences?.skills,
+          skills: updates.skills
+            ? (Array.isArray(updates.skills) ? updates.skills : String(updates.skills).split(',').map((s) => s.trim()).filter(Boolean))
+            : current.jobPreferences?.skills,
           workType: updates.workType || current.jobPreferences?.workType,
           locationType: updates.locationType || current.jobPreferences?.locationType,
         }
@@ -176,6 +179,29 @@ export function AuthProvider({ children }) {
       }
       return next;
     });
+
+    // Automatically persist to SheetDB Excel sheet
+    try {
+      const activePhone = updates.phone || userPhone || (typeof localStorage !== 'undefined' ? localStorage.getItem(PHONE_STORAGE_KEY) : null);
+      if (activePhone && String(activePhone).replace(/\D/g, '').length >= 10) {
+        const activeName = updates.fullName || profile?.fullName || 'LivPath User';
+        const activeSkills = updates.skills || profile?.skills || [];
+        const activeLoc = updates.location || profile?.location || 'Tamil Nadu';
+        const activeWorkType = updates.workType || profile?.workType || 'Full-time';
+        const activeLang = updates.lang || updates.language || 'en';
+
+        saveUserToSheet({
+          name: activeName,
+          phone: activePhone,
+          lang: activeLang,
+          skills: activeSkills,
+          location: activeLoc,
+          workType: activeWorkType,
+        }).catch((err) => console.warn('Background SheetDB sync error:', err));
+      }
+    } catch (err) {
+      console.warn('SheetDB sync trigger error:', err);
+    }
   };
 
   const savePersonalDetails = (details) => {

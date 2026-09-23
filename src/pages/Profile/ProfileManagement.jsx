@@ -126,17 +126,15 @@ export default function ProfileManagement() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-secondary-container/30 rounded-bl-full -z-10 group-hover:scale-110 transition-transform duration-700"></div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
               <div className="relative">
-                <img
-                  className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
-                  alt="Profile"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4KahFx1RAcjFPALZzil4s0tLqs9vfFnLyswq0YiheTJ4ZEzVUA8ZM5MpO-OL4phje9NYhvG0AEP50GoSLG4rx2WyGtxDBlZDbK50Tyt4fOqTLkhs7mpGGPjx5Z97FRp9sm8cfm5f5ixOjd2bh6gqUWlWQBridzihZkNF5G3GCsZ5jMIDrC1C1ObW0TdLwd_Ikyg49AQ3HqweqS81SCmjLNs-oLbCv_BeTgaCLAnjX9B4NdPrh2YsUfQ"
-                />
+                <div className="w-16 h-16 rounded-2xl bg-primary-container text-on-primary flex items-center justify-center shadow-md">
+                  <span className="material-symbols-outlined text-3xl">verified_user</span>
+                </div>
                 <div
-                  className="absolute bottom-0 right-0 w-6 h-6 bg-secondary text-on-secondary rounded-full flex items-center justify-center border-2 border-white"
+                  className="absolute -bottom-1 -right-1 w-6 h-6 bg-secondary text-on-secondary rounded-full flex items-center justify-center border-2 border-white shadow-xs"
                   title="Profile Complete"
                 >
                   <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    check_circle
+                    check
                   </span>
                 </div>
               </div>

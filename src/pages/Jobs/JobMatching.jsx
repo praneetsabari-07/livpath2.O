@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguageContext } from '../../context/LanguageContext';
 import { translations } from '../../translations';
 import { jobService } from '../../services/jobService';
+import { GeminiSkillHubModal } from '../../components/gemini/GeminiSkillHubModal';
 
 export default function JobMatching() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function JobMatching() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [matchedJobs, setMatchedJobs] = useState([]);
+  const [isSkillHubOpen, setIsSkillHubOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -48,7 +50,12 @@ export default function JobMatching() {
   }, [profileData]);
 
   const prefs = profileData?.jobPreferences || {};
-  const userSkills = prefs.skills && prefs.skills.length > 0 ? prefs.skills.join(', ') : 'No specific skills provided';
+  const skillsArray = Array.isArray(prefs.skills)
+    ? prefs.skills
+    : typeof prefs.skills === 'string'
+    ? prefs.skills.split(',').map((s) => s.trim()).filter(Boolean)
+    : [];
+  const userSkills = skillsArray.length > 0 ? skillsArray.join(', ') : 'No specific skills provided';
 
   const handleViewAllJobs = () => {
     navigate('/jobs', { state: { matchedJobs } });
@@ -155,13 +162,15 @@ export default function JobMatching() {
                     <div className="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary">
                       <span className="material-symbols-outlined text-2xl">{job.icon || 'work'}</span>
                     </div>
-                    {job.badges && job.badges.length > 0 && (
-                      <span className={`px-3 py-1 bg-${job.badges[0].color}/10 text-${job.badges[0].color} rounded-full font-label-sm flex items-center gap-1`}>
-                        <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                          {job.badges[0].icon}
-                        </span> 
+                    {job.badges && job.badges.length > 0 && job.badges[0] && (
+                      <span className={`px-3 py-1 ${job.badges[0].color ? `bg-${job.badges[0].color}/10 text-${job.badges[0].color}` : 'bg-primary/10 text-primary'} rounded-full font-label-sm flex items-center gap-1`}>
+                        {job.badges[0].icon && (
+                          <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                            {job.badges[0].icon}
+                          </span>
+                        )} 
                         {job.badges[0].text === 'Matches your skills' ? t('jobMatching_matchesSkills') : 
-                         job.badges[0].text === 'High Demand' ? t('jobMatching_highDemand') : job.badges[0].text}
+                         job.badges[0].text === 'High Demand' ? t('jobMatching_highDemand') : (job.badges[0].text || '')}
                       </span>
                     )}
                   </div>
@@ -190,6 +199,40 @@ export default function JobMatching() {
               ))}
             </div>
           </section>
+
+          {/* YouTube Video Learning & AI Quiz Hub Banner */}
+          <section className="p-6 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-teal-500/10 border border-amber-500/30 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-fade-in">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-amber-600 text-white flex items-center justify-center font-black shadow-md shrink-0">
+                <span className="material-symbols-outlined text-2xl">smart_display</span>
+              </div>
+              <div>
+                <h3 className="font-headline-md text-primary text-lg">
+                  {language === 'ta' ? 'YouTube வீடியோ பயிற்சிகள் & AI வினாடி வினா' : 'YouTube Skill Tutorials & AI Quiz'}
+                </h3>
+                <p className="font-body-md text-on-surface-variant text-sm">
+                  {language === 'ta'
+                    ? 'உங்கள் திறனுக்கேற்ற யூடியூப் செய்முறை வீடியோக்களைப் பார்த்து AI வினாடி வினா மூலம் பயிற்சி பெறுங்கள்.'
+                    : 'Watch practical YouTube tutorials tailored to your trade and test your knowledge with AI-generated quizzes.'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsSkillHubOpen(true)}
+              className="px-5 py-3 rounded-xl bg-primary-container hover:bg-primary-container/90 text-on-primary font-label-md flex items-center gap-2 shadow-md transition-all shrink-0 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-amber-300 text-lg">auto_awesome</span>
+              <span>{language === 'ta' ? 'வீடியோ பாடங்களைப் பார்' : 'Explore Skill Videos'}</span>
+            </button>
+          </section>
+
+          {/* Skill Hub Modal */}
+          <GeminiSkillHubModal
+            isOpen={isSkillHubOpen}
+            onClose={() => setIsSkillHubOpen(false)}
+            initialQuery={skillsArray.length > 0 ? skillsArray[0] : ''}
+          />
         </div>
       )}
     </div>

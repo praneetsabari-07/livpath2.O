@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect, useMemo } from 'react';
 import { translations } from '../translations';
+import { TRANSLATIONS } from '../data/translations';
 
 const SPEECH_CODES = {
   en: 'en-IN',
@@ -54,8 +55,13 @@ export function LanguageProvider({ children }) {
   const t = useMemo(() => {
     return (key, fallback) => {
       const currentDict = translations[language] || translations.en || {};
+      if (currentDict[key]) return currentDict[key];
+
+      const transDict = (TRANSLATIONS && TRANSLATIONS[language]) || (TRANSLATIONS && TRANSLATIONS.en) || {};
+      if (transDict[key]) return transDict[key];
+
       const fallbackDict = translations.en || {};
-      return currentDict[key] || fallbackDict[key] || fallback || key;
+      return fallbackDict[key] || fallback || key;
     };
   }, [language]);
 

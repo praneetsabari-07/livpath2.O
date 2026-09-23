@@ -25,12 +25,12 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({ onEditProfile,
       <div className="bg-gradient-to-r from-teal-900 via-teal-800 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-teal-700/50 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
         <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
           <div className="relative">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center font-black text-2xl shadow-lg border-2 border-white">
-              {fullName.charAt(0)}
+            <div className="w-16 h-16 rounded-2xl bg-teal-800/80 border border-teal-600 text-teal-300 flex items-center justify-center shadow-lg">
+              <ShieldCheck className="w-8 h-8 text-teal-300" />
             </div>
             {profile?.certificateVerified && (
               <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-1 rounded-full border-2 border-slate-900 shadow">
-                <CheckCircle2 className="w-4 h-4" />
+                <CheckCircle2 className="w-3.5 h-3.5" />
               </div>
             )}
           </div>

@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import MainNavigation from './MainNavigation';
 import BackgroundDecor from './BackgroundDecor';
 import BottomWaves from './BottomWaves';
+import ErrorBoundary from '../common/ErrorBoundary';
 
 /**
  * Layout wrapper for the persistent main LivPath AI experience.
@@ -17,7 +18,9 @@ export default function MainAppLayout() {
       <MainNavigation />
       {/* pt-16 clears the fixed NavShell (h-16) so page content is never hidden behind it */}
       <main className="flex-grow relative z-10 flex flex-col pt-16">
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </main>
       <BottomWaves />
     </div>

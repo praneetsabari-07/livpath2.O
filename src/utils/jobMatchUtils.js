@@ -1,8 +1,14 @@
 export function getJobMatchInsights(job, profileData) {
   const prefs = profileData?.jobPreferences || {};
   const personal = profileData?.personalDetails || {};
-  const userSkills = (prefs.skills || []).map((s) => s.toLowerCase());
-  const jobSkills = (job.skillsRequired || []).map((s) => s.toLowerCase());
+  const rawSkills = prefs.skills || profileData?.skills || [];
+  const skillsList = Array.isArray(rawSkills)
+    ? rawSkills
+    : typeof rawSkills === 'string'
+    ? rawSkills.split(',').map((s) => s.trim()).filter(Boolean)
+    : [];
+  const userSkills = skillsList.map((s) => String(s).toLowerCase());
+  const jobSkills = (job.skillsRequired || []).map((s) => String(s).toLowerCase());
 
   const matchedSkills = jobSkills.filter((skill) => userSkills.includes(skill));
   const reasons = [];
@@ -90,7 +96,13 @@ export function getJobMatchInsights(job, profileData) {
  * training is available. Used on the Job Details page and the Discover cards.
  */
 export function getQualificationGap(job, profileData) {
-  const userSkills = (profileData?.jobPreferences?.skills || []).map((s) => s.toLowerCase());
+  const rawSkills = profileData?.jobPreferences?.skills || profileData?.skills || [];
+  const skillsList = Array.isArray(rawSkills)
+    ? rawSkills
+    : typeof rawSkills === 'string'
+    ? rawSkills.split(',').map((s) => s.trim()).filter(Boolean)
+    : [];
+  const userSkills = skillsList.map((s) => String(s).toLowerCase());
   const required = job?.skillsRequired || [];
   const quals = job?.qualifications || [];
 
@@ -121,7 +133,13 @@ export function getQualificationGap(job, profileData) {
 
 /** Skill and education overlap score between a job and the user's profile. */
 export function skillOverlap(job, profileData) {
-  const userSkills = (profileData?.jobPreferences?.skills || []).map((s) => s.toLowerCase());
+  const rawSkills = profileData?.jobPreferences?.skills || profileData?.skills || [];
+  const skillsList = Array.isArray(rawSkills)
+    ? rawSkills
+    : typeof rawSkills === 'string'
+    ? rawSkills.split(',').map((s) => s.trim()).filter(Boolean)
+    : [];
+  const userSkills = skillsList.map((s) => String(s).toLowerCase());
   const skillCount = (job?.skillsRequired || []).filter((s) =>
     userSkills.includes(s.toLowerCase())
   ).length;

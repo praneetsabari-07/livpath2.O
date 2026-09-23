@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useVoiceAssistant } from '../../context/VoiceAssistantContext';
-import { sendOTP } from '../../services/authService';
+import { sendOTP, checkUser } from '../../services/authService';
 
 export default function PhoneEntry() {
   const navigate = useNavigate();
-  const { setPhoneData } = useAuth();
-  const { t, language } = useLanguage();
+  const { setPhoneData, updateProfile, setProfileData, setUser } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
   const { speak } = useVoiceAssistant();
 
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -24,6 +24,71 @@ export default function PhoneEntry() {
     setIsLoading(true);
     setErrorMsg('');
     try {
+      // 1. Check if number is already in SheetDB Excel sheet
+      const existingCheck = await checkUser(phoneNumber);
+      if (existingCheck?.isExistingUser && existingCheck?.user) {
+        const userData = existingCheck.user;
+        const rawSkills = userData.skills || [];
+        const normalizedSkills = Array.isArray(rawSkills)
+          ? rawSkills
+          : typeof rawSkills === 'string'
+          ? rawSkills.split(',').map((s) => s.trim()).filter(Boolean)
+          : [];
+
+        if (updateProfile) {
+          updateProfile({
+            fullName: userData.fullName,
+            phone: phoneNumber,
+            skills: normalizedSkills,
+            location: userData.location || '',
+            workType: userData.workType || 'Full-time',
+          });
+        }
+
+        if (setProfileData) {
+          setProfileData(prev => ({
+            ...(prev || {}),
+            fullName: userData.fullName,
+            location: userData.location,
+            personalDetails: {
+              ...(prev?.personalDetails || {}),
+              fullName: userData.fullName,
+              location: userData.location,
+            },
+            jobPreferences: {
+              ...(prev?.jobPreferences || {}),
+              skills: normalizedSkills,
+              workType: userData.workType,
+              locationType: 'Near me',
+              specificLocation: userData.location,
+            },
+          }));
+        }
+
+        if (setUser) {
+          setUser({
+            id: `user-${phoneNumber}`,
+            name: userData.fullName,
+            phone: phoneNumber,
+          });
+        }
+
+        if (userData.language && setLanguage) {
+          setLanguage(userData.language);
+        }
+
+        speak(
+          language === 'ta'
+            ? `வரவேற்கிறோம் ${userData.fullName}! உங்கள் கணக்கு அங்கீகரிக்கப்பட்டது.`
+            : `Welcome back ${userData.fullName}! Opening your dashboard.`
+        );
+
+        // Straight to dashboard, skipping OTP and middle steps completely
+        navigate('/job-matching', { replace: true });
+        return;
+      }
+
+      // 2. New number -> send real OTP and navigate to OTP verification
       const result = await sendOTP(phoneNumber);
       setPhoneData({
         countryCode: '+91',

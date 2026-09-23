@@ -177,27 +177,6 @@ export default function OTPVerification() {
               </button>
             </div>
 
-            {/* Twilio / OTP Status Card */}
-            {phoneData?.demoOtp && (
-              <div className="w-full mb-4 bg-sky-50 border border-sky-200 rounded-xl p-3 flex items-center justify-between shadow-2xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span className="text-xs text-sky-950 font-medium">
-                    {phoneData.smsSent
-                      ? '📱 Twilio SMS Sent'
-                      : `Code: `}
-                    <strong className="text-primary-container ml-1">{phoneData.demoOtp}</strong>
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAutoFillDemo}
-                  className="px-2.5 py-1 text-[11px] font-bold bg-primary-container text-white rounded-lg hover:bg-primary shadow-xs transition-transform active:scale-95"
-                >
-                  Auto-fill
-                </button>
-              </div>
-            )}
 
             {/* OTP Input Boxes */}
             <form onSubmit={handleVerify} className="w-full flex flex-col items-center mt-2">
