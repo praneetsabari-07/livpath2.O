@@ -82,13 +82,22 @@ export async function saveUserToSheet(userData) {
       throw new Error('Phone number is required to save to SheetDB');
     }
 
+    const existingCheck = await lookupUserInSheet(cleanPhone);
+    const existingName = existingCheck?.user?.fullName;
+    const providedName = String(userData.fullName || userData.name || '').trim();
+
+    // Only update name if user actually provided a specific name; otherwise retain existing name
+    const resolvedName = (providedName && providedName !== 'LivPath User' && providedName !== 'Ramesh Kumar')
+      ? providedName
+      : (existingName && existingName !== 'LivPath User' && existingName !== 'Ramesh Kumar' ? existingName : (providedName || 'User'));
+
     const row = {
-      'name': userData.fullName || userData.name || 'LivPath User',
+      'name': resolvedName,
       'phone number': cleanPhone,
-      'lang': userData.lang || userData.language || 'en',
-      'skills': Array.isArray(userData.skills) ? userData.skills.join(', ') : (userData.skills || ''),
-      'location': userData.location || userData.specificLocation || userData.district || 'Tamil Nadu',
-      'work type': userData.workType || userData['work type'] || 'Full-time',
+      'lang': userData.lang || userData.language || existingCheck?.user?.language || 'en',
+      'skills': Array.isArray(userData.skills) ? userData.skills.join(', ') : (userData.skills || (Array.isArray(existingCheck?.user?.skills) ? existingCheck.user.skills.join(', ') : '')),
+      'location': userData.location || userData.specificLocation || userData.district || existingCheck?.user?.location || 'Salem, Tamil Nadu',
+      'work type': userData.workType || userData['work type'] || existingCheck?.user?.workType || 'Full-time',
     };
 
     // 1. Try server proxy endpoint
@@ -106,7 +115,6 @@ export async function saveUserToSheet(userData) {
     }
 
     // 2. Direct SheetDB write: check if user already exists
-    const existingCheck = await lookupUserInSheet(cleanPhone);
     if (existingCheck.exists) {
       // Update existing row
       const patchRes = await fetch(`${SHEETDB_URL}/phone%20number/${cleanPhone}`, {

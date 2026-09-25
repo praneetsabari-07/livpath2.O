@@ -8,43 +8,43 @@ const APPS_STORAGE_KEY = 'livpath_applications';
 const PHONE_STORAGE_KEY = 'livpath_user_phone';
 
 const DEFAULT_PROFILE = {
-  fullName: 'Ramesh Kumar',
-  phone: '9876543210',
-  age: '24',
-  gender: 'male',
-  location: 'Salem, Tamil Nadu',
-  district: 'Salem',
+  fullName: '',
+  phone: '',
+  age: '',
+  gender: '',
+  location: '',
+  district: '',
   state: 'Tamil Nadu',
-  education: '10th_pass',
-  skills: ['Tailoring', 'Stitching', 'Garment Finishing'],
+  education: '',
+  skills: [],
   workType: 'Full-time',
   locationType: 'Near me',
-  preferredSalary: '₹18,000 / month',
-  hasExperience: true,
-  experienceDescription: '2 years working in local garment unit stitching shirts and blouses.',
+  preferredSalary: '',
+  hasExperience: false,
+  experienceDescription: '',
   certificateVerified: true,
   certificateType: 'Community & Vocational Certificate',
-  verifiedAt: 'Aug 30, 2026',
+  verifiedAt: '',
 };
 
 const DEFAULT_PROFILE_DATA = {
-  fullName: 'Ramesh Kumar',
-  location: 'Salem, Tamil Nadu',
+  fullName: '',
+  location: '',
   personalDetails: {
-    fullName: 'Ramesh Kumar',
-    age: '24',
-    gender: 'male',
-    location: 'Salem, Tamil Nadu',
-    education: '10th Pass',
-    experience: '2 years',
-    experienceDetails: 'Tailoring and garment stitching unit experience in Salem',
+    fullName: '',
+    age: '',
+    gender: '',
+    location: '',
+    education: '',
+    experience: '',
+    experienceDetails: '',
   },
   jobPreferences: {
-    skills: ['Tailoring', 'Stitching', 'Garment Finishing'],
+    skills: [],
     workType: 'Full-time',
     locationType: 'Near me',
-    specificLocation: 'Salem, Tamil Nadu',
-    expectedSalary: '₹18,000 – ₹24,000 / month',
+    specificLocation: '',
+    expectedSalary: '',
   },
 };
 
@@ -72,26 +72,37 @@ const INITIAL_APPLICATIONS = [
 ];
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => ({
-    id: 'user-1',
-    name: 'Ramesh Kumar',
-    phone: '9876543210',
-  }));
+  const [userPhone, setUserPhoneState] = useState(() => {
+    try {
+      return localStorage.getItem(PHONE_STORAGE_KEY) || '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [user, setUser] = useState(() => {
+    try {
+      const savedProf = localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (savedProf) {
+        const parsed = JSON.parse(savedProf);
+        if (parsed.fullName) {
+          return { id: `user-${parsed.phone || 'me'}`, name: parsed.fullName, phone: parsed.phone };
+        }
+      }
+    } catch {}
+    return {
+      id: 'user-guest',
+      name: '',
+      phone: '',
+    };
+  });
 
   const [phoneData, setPhoneData] = useState(() => ({
     countryCode: '+91',
-    number: '9876543210',
+    number: '',
     demoOtp: '123456',
-    smsSent: true,
+    smsSent: false,
   }));
-
-  const [userPhone, setUserPhoneState] = useState(() => {
-    try {
-      return localStorage.getItem(PHONE_STORAGE_KEY) || '9876543210';
-    } catch {
-      return '9876543210';
-    }
-  });
 
   const [profile, setProfile] = useState(() => {
     try {
@@ -297,9 +308,9 @@ export const useAuth = () => {
     return {
       profile: DEFAULT_PROFILE,
       profileData: DEFAULT_PROFILE_DATA,
-      userPhone: '9876543210',
-      user: { id: 'user-1', name: 'Ramesh Kumar' },
-      phoneData: { countryCode: '+91', number: '9876543210', demoOtp: '123456' },
+      userPhone: '',
+      user: { id: 'user-guest', name: '' },
+      phoneData: { countryCode: '+91', number: '', demoOtp: '123456' },
       applications: INITIAL_APPLICATIONS,
       updateProfile: () => {},
       setUserPhone: () => {},

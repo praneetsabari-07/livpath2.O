@@ -16,8 +16,14 @@ export const getProfile = async () => {
 
 export const savePersonalDetails = async (data) => {
   try {
-    const currentPhone = data.phone || localStorage.getItem(PHONE_STORAGE_KEY) || '9876543210';
+    let existingProfile = {};
+    try {
+      existingProfile = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || '{}');
+    } catch {}
+
+    const currentPhone = data.phone || localStorage.getItem(PHONE_STORAGE_KEY) || existingProfile.phone || '';
     const payload = {
+      ...existingProfile,
       ...data,
       phone: currentPhone,
     };
@@ -42,11 +48,15 @@ export const savePersonalDetails = async (data) => {
 
 export const saveJobPreferences = async (data) => {
   try {
-    const currentPhone = localStorage.getItem(PHONE_STORAGE_KEY) || '9876543210';
     let profile = {};
     try {
       profile = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || '{}');
     } catch {}
+
+    const currentPhone = data.phone || localStorage.getItem(PHONE_STORAGE_KEY) || profile.phone || '';
+    if (!currentPhone) {
+      return { success: true };
+    }
 
     const payload = {
       ...profile,

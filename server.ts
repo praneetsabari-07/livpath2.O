@@ -530,24 +530,32 @@ app.post('/api/sheet/user', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Phone number is required' });
     }
 
-    const formattedRow = {
-      'name': row.name || row.fullName || 'LivPath User',
-      'phone number': cleanPhone,
-      'lang': row.lang || row.language || 'en',
-      'skills': Array.isArray(row.skills) ? row.skills.join(', ') : (row.skills || ''),
-      'location': row.location || 'Salem, Tamil Nadu',
-      'work type': row['work type'] || row.workType || 'Full-time',
-    };
-
-    // Check if user already exists
+    // Check if user already exists in SheetDB
     const checkRes = await fetch(`${SHEETDB_URL}/search?phone%20number=${cleanPhone}`);
-    let exists = false;
+    let existingRow: any = null;
     if (checkRes.ok) {
       const rows = await checkRes.json();
-      exists = Array.isArray(rows) && rows.length > 0;
+      if (Array.isArray(rows) && rows.length > 0) {
+        existingRow = rows.find((r: any) => String(r['phone number'] || '').replace(/\D/g, '').slice(-10) === cleanPhone) || rows[0];
+      }
     }
 
-    if (exists) {
+    const providedName = String(row.name || row.fullName || '').trim();
+    // Use provided name, or preserve existing row's name; never default to random names
+    const resolvedName = (providedName && providedName !== 'LivPath User' && providedName !== 'Ramesh Kumar')
+      ? providedName
+      : (existingRow?.['name'] || existingRow?.name || providedName || 'User');
+
+    const formattedRow = {
+      'name': resolvedName,
+      'phone number': cleanPhone,
+      'lang': row.lang || row.language || existingRow?.['lang'] || 'en',
+      'skills': Array.isArray(row.skills) ? row.skills.join(', ') : (row.skills || existingRow?.['skills'] || ''),
+      'location': row.location || existingRow?.['location'] || 'Salem, Tamil Nadu',
+      'work type': row['work type'] || row.workType || existingRow?.['work type'] || 'Full-time',
+    };
+
+    if (existingRow) {
       const patchRes = await fetch(`${SHEETDB_URL}/phone%20number/${cleanPhone}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
