@@ -119,43 +119,61 @@ export const processTranscript = async (transcript, language = 'en') => {
     skills: [],
   };
 
-  // Name patterns
-  const nameMatch = text.match(/(?:my name is|i am|name is|பெயர்|என் பெயர்)\s+([a-zA-Z\u0B80-\u0BFF\u0900-\u097F\s]{2,20})/i);
+  // Name patterns (EN, TA, HI)
+  const nameMatch = text.match(/(?:my name is|i am|this is|name is|பெயர்|என் பெயர்|பேரு|मेरा नाम|नाम है)\s+([a-zA-Z\u0B80-\u0BFF\u0900-\u097F\s]{2,25})/i);
   if (nameMatch) {
-    result.fullName = nameMatch[1].trim();
+    const rawName = nameMatch[1]
+      .replace(/\b(and|i am|age|வயது|साल|from|living|years|old|work|is)\b/gi, '')
+      .trim();
+    if (rawName.length >= 2) {
+      result.fullName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    }
   }
 
-  // Age patterns
-  const ageMatch = text.match(/(?:age|வயது|साल|वर्ष)\s*(?:is)?\s*(\d{2})/i) || text.match(/\b(1[8-9]|[2-6]\d)\b/);
+  // Age & DOB patterns
+  const ageMatch = text.match(/(?:age|வயது|साल|वर्ष|years old)\s*(?:is)?\s*(\d{2})/i) || text.match(/\b(1[8-9]|[2-6]\d)\b/);
   if (ageMatch) {
     result.age = ageMatch[1];
+    const currentYear = new Date().getFullYear();
+    const birthYear = currentYear - parseInt(ageMatch[1], 10);
+    result.dob = `${birthYear}-01-01`;
+  }
+
+  const dobMatch = text.match(/\b(\d{4})[-/](\d{1,2})[-/](\d{1,2})\b/);
+  if (dobMatch) {
+    result.dob = `${dobMatch[1]}-${dobMatch[2].padStart(2, '0')}-${dobMatch[3].padStart(2, '0')}`;
   }
 
   // Gender
-  if (text.includes('female') || text.includes('woman') || text.includes('பெண்') || text.includes('महिला')) {
+  if (text.includes('female') || text.includes('woman') || text.includes('girl') || text.includes('பெண்') || text.includes('மகள்') || text.includes('महिला') || text.includes('औरत')) {
     result.gender = 'female';
-  } else if (text.includes('male') || text.includes('man') || text.includes('ஆண்') || text.includes('पुरुष')) {
+  } else if (text.includes('male') || text.includes('man') || text.includes('boy') || text.includes('ஆண்') || text.includes('மகன்') || text.includes('पुरुष') || text.includes('आदमी')) {
     result.gender = 'male';
+  } else if (text.includes('other') || text.includes('trans') || text.includes('மாற்றுத்திருனாளி')) {
+    result.gender = 'other';
   }
 
-  // Education
-  if (text.includes('10th') || text.includes('பத்தாம்') || text.includes('दसवीं')) {
-    result.education = '10th_pass';
-  } else if (text.includes('12th') || text.includes('பன்னிரண்டாம்') || text.includes('बारहवीं')) {
-    result.education = '12th_pass';
-  } else if (text.includes('iti') || text.includes('diploma') || text.includes('டிப்ளமோ')) {
-    result.education = 'iti_vocational';
-  } else if (text.includes('graduate') || text.includes('degree') || text.includes('பட்டதாரி')) {
-    result.education = 'graduate';
-  } else if (text.includes('8th') || text.includes('5th') || text.includes('school') || text.includes('படிக்கவில்லை')) {
-    result.education = 'below_10th';
+  // Education (matches dropdown values: 'school', 'diploma', 'ug', 'pg')
+  if (text.includes('diploma') || text.includes('iti') || text.includes('டிப்ளமோ') || text.includes('आईटीआई')) {
+    result.education = 'diploma';
+  } else if (text.includes('postgraduate') || text.includes('pg') || text.includes('master') || text.includes('msc') || text.includes('mca') || text.includes('mba') || text.includes('முதுகலை')) {
+    result.education = 'pg';
+  } else if (text.includes('undergraduate') || text.includes('ug') || text.includes('graduate') || text.includes('degree') || text.includes('college') || text.includes('btech') || text.includes('be') || text.includes('bsc') || text.includes('bcom') || text.includes('பட்டதாரி')) {
+    result.education = 'ug';
+  } else if (text.includes('school') || text.includes('10th') || text.includes('12th') || text.includes('pass') || text.includes('பத்தாம்') || text.includes('பன்னிரண்டாம்') || text.includes('दसवीं') || text.includes('बारहवीं') || text.includes('8th') || text.includes('5th')) {
+    result.education = 'school';
   }
 
   // Location
-  const cities = ['Salem', 'Chennai', 'Coimbatore', 'Bengaluru', 'Madurai', 'Tiruppur', 'Erode', 'Trichy', 'Hyderabad', 'Mumbai', 'Delhi'];
+  const cities = [
+    'Salem', 'Chennai', 'Coimbatore', 'Bengaluru', 'Bangalore', 'Madurai', 'Tiruppur', 'Erode',
+    'Trichy', 'Tiruchirappalli', 'Namakkal', 'Karur', 'Dindigul', 'Dharmapuri', 'Krishnagiri',
+    'Vellore', 'Tirunelveli', 'Thanjavur', 'Kanchipuram', 'Cuddalore', 'Villupuram', 'Hyderabad',
+    'Mumbai', 'Delhi', 'Kolkata', 'Pune'
+  ];
   for (const city of cities) {
     if (text.includes(city.toLowerCase())) {
-      result.location = city;
+      result.location = city === 'Bangalore' ? 'Bengaluru' : (city === 'Tiruchirappalli' ? 'Trichy' : city);
       break;
     }
   }

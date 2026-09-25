@@ -1,4 +1,5 @@
 import { BrowserRouter as Router } from 'react-router-dom';
+import ScrollToTop from './components/common/ScrollToTop';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ProfileProvider } from './context/ProfileContext';
@@ -13,6 +14,7 @@ function App() {
         <ProfileProvider>
           <VoiceAssistantProvider>
             <Router>
+              <ScrollToTop />
               <AppRoutes />
               {/* Floating Voice Assistant Ball at bottom-right for accessibility */}
               <FloatingVoiceBall />

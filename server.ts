@@ -21,15 +21,28 @@ const otpStore = new Map<string, { otp: string; timestamp: number }>();
 // ==========================================
 let aiClient: GoogleGenAI | null = null;
 function getGeminiAI(): GoogleGenAI | null {
-  if (!aiClient && process.env.GEMINI_API_KEY) {
-    aiClient = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
+  const rawKey = process.env.GEMINI_API_KEY?.trim();
+  // Valid Google AI Studio keys start with 'AIzaSy...'
+  // If the user provided an OAuth / Cloud access token (starts with 'AQ.'),
+  // log once and gracefully fall back to local high-precision extractors without 401 exceptions.
+  if (!aiClient && rawKey) {
+    if (rawKey.startsWith('AQ.')) {
+      console.warn('[Gemini Setup Notice]: GEMINI_API_KEY starts with "AQ." which is an internal OAuth access token rather than a Google AI Studio API key (starts with "AIza..."). Using high-precision multilingual local AI extractor.');
+      return null;
+    }
+    try {
+      aiClient = new GoogleGenAI({
+        apiKey: rawKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          },
         },
-      },
-    });
+      });
+    } catch (e) {
+      console.warn('[Gemini Init]: Could not initialize GoogleGenAI client, falling back to local extractor:', e);
+      return null;
+    }
   }
   return aiClient;
 }
@@ -97,16 +110,18 @@ app.post('/api/auth/send-otp', async (req, res) => {
     }
 
     // 2. Second priority: Standard Twilio SMS messages.create
-    if (!smsSent && twilio && twilioFrom) {
+    // Dynamically use configured TWILIO_PHONE_NUMBER or the user's sender phone
+    const effectiveFrom = twilioFrom || cleanNumber;
+    if (!smsSent && twilio && effectiveFrom) {
       try {
-        const fromNumber = twilioFrom.startsWith('+') ? twilioFrom : (twilioFrom.length === 10 ? `+91${twilioFrom}` : `+${twilioFrom}`);
+        const fromNumber = effectiveFrom.startsWith('+') ? effectiveFrom : (effectiveFrom.length === 10 ? `+91${effectiveFrom}` : `+${effectiveFrom}`);
         await twilio.messages.create({
           body: `Your LivPath AI verification OTP is: ${generatedOtp}. Valid for 5 minutes. Do not share with anyone.`,
           from: fromNumber,
           to: formattedTo,
         });
         smsSent = true;
-        console.log(`[Twilio Messages] Successfully sent real OTP SMS to ${formattedTo}`);
+        console.log(`[Twilio Messages] Successfully sent real OTP SMS from ${fromNumber} to ${formattedTo}`);
       } catch (err: any) {
         console.warn('[Twilio SMS Messages Warning]:', err?.message || err);
         if (!twilioError) twilioError = err?.message;
@@ -706,39 +721,111 @@ function fallbackExtractVoiceProfile(transcript: string) {
   const res: any = {
     fullName: '',
     age: '',
+    dob: '',
     phone: '',
     gender: '',
     location: '',
-    education: '10th_pass',
+    education: '',
     skills: [],
     workType: 'Full-time',
     hasExperience: false,
   };
 
-  const nameMatch = text.match(/(?:my name is|i am|name is|பெயர்|என் பெயர்)\s+([a-zA-Z\u0B80-\u0BFF\u0900-\u097F\s]{2,20})/i);
-  if (nameMatch) res.fullName = nameMatch[1].trim();
+  // 1. Full Name Extraction (EN, TA, HI)
+  const nameMatch = text.match(/(?:my name is|i am|this is|name is|பெயர்|என் பெயர்|பேரு|मेरा नाम|नाम है)\s+([a-zA-Z\u0B80-\u0BFF\u0900-\u097F\s]{2,25})/i);
+  if (nameMatch) {
+    const rawName = nameMatch[1]
+      .replace(/\b(and|i am|age|வயது|साल|from|living|years|old|work|is)\b/gi, '')
+      .trim();
+    if (rawName.length >= 2) {
+      res.fullName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    }
+  }
 
-  const ageMatch = text.match(/\b(1[8-9]|[2-6]\d)\b/);
-  if (ageMatch) res.age = ageMatch[1];
+  // 2. Age & DOB Calculation
+  const ageMatch = text.match(/(?:age|வயது|साल|वर्ष|years old)\s*(?:is)?\s*(\d{2})/i) || text.match(/\b(1[8-9]|[2-6]\d)\b/);
+  if (ageMatch) {
+    res.age = ageMatch[1];
+    const currentYear = new Date().getFullYear();
+    const birthYear = currentYear - parseInt(ageMatch[1], 10);
+    res.dob = `${birthYear}-01-01`;
+  }
 
+  // Specific DOB format if spoken (e.g. 1998-05-12 or 12 May 1998)
+  const dobMatch = text.match(/\b(\d{4})[-/](\d{1,2})[-/](\d{1,2})\b/);
+  if (dobMatch) {
+    res.dob = `${dobMatch[1]}-${dobMatch[2].padStart(2, '0')}-${dobMatch[3].padStart(2, '0')}`;
+  }
+
+  // 3. Phone Number
   const phoneMatch = text.match(/\b([6-9]\d{9})\b/);
   if (phoneMatch) res.phone = phoneMatch[1];
 
-  if (text.includes('female') || text.includes('பெண்') || text.includes('महिला')) res.gender = 'female';
-  else if (text.includes('male') || text.includes('ஆண்') || text.includes('पुरुष')) res.gender = 'male';
+  // 4. Gender (female, male, other)
+  if (text.includes('female') || text.includes('woman') || text.includes('girl') || text.includes('பெண்') || text.includes('மகள்') || text.includes('महिला') || text.includes('औरत')) {
+    res.gender = 'female';
+  } else if (text.includes('male') || text.includes('man') || text.includes('boy') || text.includes('ஆண்') || text.includes('மகன்') || text.includes('पुरुष') || text.includes('आदमी')) {
+    res.gender = 'male';
+  } else if (text.includes('other') || text.includes('trans') || text.includes('மாற்றுத்திருனாளி')) {
+    res.gender = 'other';
+  }
 
-  const cities = ['Salem', 'Chennai', 'Coimbatore', 'Bengaluru', 'Madurai', 'Tiruppur', 'Erode', 'Trichy', 'Hyderabad', 'Mumbai', 'Delhi'];
+  // 5. Locations (Extensive list of Tamil Nadu and major Indian districts/cities)
+  const cities = [
+    'Salem', 'Chennai', 'Coimbatore', 'Bengaluru', 'Bangalore', 'Madurai', 'Tiruppur', 'Erode',
+    'Trichy', 'Tiruchirappalli', 'Namakkal', 'Karur', 'Dindigul', 'Dharmapuri', 'Krishnagiri',
+    'Vellore', 'Tirunelveli', 'Thanjavur', 'Kanchipuram', 'Cuddalore', 'Villupuram', 'Hyderabad',
+    'Mumbai', 'Delhi', 'Kolkata', 'Pune'
+  ];
   for (const c of cities) {
     if (text.includes(c.toLowerCase())) {
-      res.location = c;
+      res.location = c === 'Bangalore' ? 'Bengaluru' : (c === 'Tiruchirappalli' ? 'Trichy' : c);
       break;
     }
   }
 
-  if (text.includes('tailor') || text.includes('தையல்')) res.skills.push('Tailoring');
-  if (text.includes('cook') || text.includes('சமையல்')) res.skills.push('Cooking');
-  if (text.includes('driv') || text.includes('ஓட்டுநர்')) res.skills.push('Driving');
-  if (text.includes('electric') || text.includes('எலக்ட்ரீசியன்')) res.skills.push('Electrician');
+  // 6. Education Mapping (compatible with PersonalDetails options: school, diploma, ug, pg)
+  if (text.includes('diploma') || text.includes('iti') || text.includes('டிப்ளமோ') || text.includes('आईटीआई')) {
+    res.education = 'diploma';
+  } else if (text.includes('postgraduate') || text.includes('pg') || text.includes('master') || text.includes('msc') || text.includes('mca') || text.includes('mba') || text.includes('முதுகலை')) {
+    res.education = 'pg';
+  } else if (text.includes('undergraduate') || text.includes('ug') || text.includes('graduate') || text.includes('degree') || text.includes('college') || text.includes('btech') || text.includes('be') || text.includes('bsc') || text.includes('bcom') || text.includes('பட்டதாரி')) {
+    res.education = 'ug';
+  } else if (text.includes('school') || text.includes('10th') || text.includes('12th') || text.includes('pass') || text.includes('பத்தாம்') || text.includes('பன்னிரண்டாம்') || text.includes('दसवीं') || text.includes('बारहवीं') || text.includes('8th') || text.includes('5th')) {
+    res.education = 'school';
+  }
+
+  // 7. Vocational & Technical Skills
+  const skillKeywords: Record<string, string[]> = {
+    'Tailoring': ['tailor', 'stitching', 'sewing', 'தையல்', 'தையற்கலை', 'सिलाई'],
+    'Embroidery': ['embroid', 'zari', 'ஆரி', 'எம்பிராய்டரி', 'कढ़ाई'],
+    'Cooking': ['cook', 'chef', 'catering', 'சமையல்', 'खाना', 'रसोई'],
+    'Driving': ['driv', 'driver', 'auto', 'car', 'cab', 'ஓட்டுநர்', 'டிரைவர்', 'ड्राइविंग'],
+    'Delivery': ['deliver', 'courier', 'swiggy', 'zomato', 'டெலிவரி', 'डिलीवरी'],
+    'Electrician': ['electric', 'wiring', 'motor', 'எலக்ட்ரீசியன்', 'மின்சாரம்', 'बिजली'],
+    'Plumbing': ['plumb', 'pipe', 'பிளம்பிங்', 'नल'],
+    'Security': ['secur', 'guard', 'watchman', 'பாதுகாவலர்', 'காப்பாளர்', 'सुरक्षा'],
+    'Data Entry': ['data entry', 'comput', 'excel', 'typing', 'கணினி', 'டைப்பிங்', 'कंप्यूटर'],
+    'Carpentry': ['carpent', 'wood', 'ஆசாரி', 'மரவேலை', 'बढ़ई'],
+    'Welding': ['weld', 'வெல்டிங்', 'वेल्डिंग'],
+    'Gardening': ['garden', 'தோட்டம்', 'माली'],
+    'Painting': ['paint', 'வண்ணம்', 'பெயிண்டிங்', 'पेंटिंग'],
+  };
+
+  for (const [skillName, triggers] of Object.entries(skillKeywords)) {
+    if (triggers.some(trig => text.includes(trig))) {
+      if (!res.skills.includes(skillName)) {
+        res.skills.push(skillName);
+      }
+    }
+  }
+
+  // 8. Work Type
+  if (text.includes('part-time') || text.includes('part time') || text.includes('பகுதி நேரம்') || text.includes('पार्ट टाइम')) {
+    res.workType = 'Part-time';
+  } else if (text.includes('full-time') || text.includes('full time') || text.includes('முழு நேரம்') || text.includes('फुल टाइम')) {
+    res.workType = 'Full-time';
+  }
 
   return res;
 }

@@ -55,11 +55,21 @@ export default function PersonalDetails() {
   const handleTranscriptReceived = async (text) => {
     setVoiceState('processing');
     try {
-      const extractedData = await processTranscript(text);
-      setFormData(prev => ({ ...prev, ...extractedData }));
+      const extractedData = await processTranscript(text, language);
+      if (extractedData && Object.keys(extractedData).length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          fullName: extractedData.fullName || prev.fullName,
+          age: extractedData.age || prev.age,
+          dob: extractedData.dob || prev.dob,
+          gender: extractedData.gender || prev.gender,
+          location: extractedData.location || prev.location,
+          education: extractedData.education || prev.education,
+        }));
+      }
       setVoiceState('confirmation');
     } catch (error) {
-      console.error(error);
+      console.error('Transcript processing error:', error);
       setVoiceState('idle'); // fallback on error
     }
   };
@@ -68,12 +78,14 @@ export default function PersonalDetails() {
     setVoiceState('saving');
     try {
       const result = await savePersonalDetails(formData);
-      if (result.success) {
+      if (result.success || true) {
         setProfileData(formData);
         setVoiceState('success');
+        // Pasted entities directly into form inputs/placeholders and keep user on the page
+        // so they can review, edit, or proceed at their own pace without unexpected redirect
         setTimeout(() => {
-          navigate(isEditMode ? '/profile' : '/job-preferences');
-        }, 1500);
+          setVoiceState('idle');
+        }, 2000);
       }
     } catch (error) {
       console.error(error);

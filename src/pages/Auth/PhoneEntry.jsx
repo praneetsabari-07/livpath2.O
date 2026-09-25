@@ -88,19 +88,25 @@ export default function PhoneEntry() {
         return;
       }
 
-      // 2. New number -> send real OTP and navigate to OTP verification
-      const result = await sendOTP(phoneNumber);
+      // 2. New number or verification -> Directly set session and proceed without OTP screen
       setPhoneData({
         countryCode: '+91',
         number: phoneNumber,
-        demoOtp: result.demoOtp || '123456',
-        smsSent: result.smsSent,
-        message: result.message,
+        demoOtp: '123456',
+        smsSent: true,
+        message: 'Phone number confirmed',
       });
-      navigate('/auth/otp');
+      if (setUser) {
+        setUser({
+          id: `user-${phoneNumber}`,
+          name: 'LivPath User',
+          phone: phoneNumber,
+        });
+      }
+      navigate('/auth/user-detection');
     } catch (error) {
-      console.error('Failed to send OTP:', error);
-      setErrorMsg('Failed to send OTP. Please check the number and try again.');
+      console.error('Failed to continue with phone:', error);
+      setErrorMsg('Failed to proceed. Please check the number and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -109,10 +115,10 @@ export default function PhoneEntry() {
   const handleListenHelp = () => {
     const text =
       language === 'ta'
-        ? 'வணக்கம்! உங்கள் 10 இலக்க மொபைல் எண்ணை உள்ளிடவும். தொடர்ந்து என்பதைக் கிளிக் செய்தால் உங்களுக்கு சரிபார்ப்புக் குறியீடு அனுப்பப்படும்.'
+        ? 'வணக்கம்! உங்கள் 10 இலக்க மொபைல் எண்ணை உள்ளிட்டு தொடர்ந்து என்பதைக் கிளிக் செய்யவும்.'
         : language === 'hi'
-        ? 'नमस्ते! कृपया अपना 10 अंकों का मोबाइल नंबर दर्ज करें। ओटीपी पाने के लिए जारी रखें पर क्लिक करें।'
-        : 'Please enter your 10-digit mobile phone number. Tap continue to receive your verification code.';
+        ? 'नमस्ते! कृपया अपना 10 अंकों का मोबाइल नंबर दर्ज करें और जारी रखें पर क्लिक करें।'
+        : 'Please enter your 10-digit mobile phone number and tap continue to proceed.';
     speak(text);
   };
 
@@ -245,19 +251,19 @@ export default function PhoneEntry() {
                 {isLoading ? (
                   <>
                     <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
-                    <span>{t('auth_verifying') || 'Sending OTP...'}</span>
+                    <span>{t('auth_verifying') || 'Processing...'}</span>
                   </>
                 ) : (
                   <>
-                    <span>{t('auth_getOtp') || 'Get Verification Code'}</span>
+                    <span>{language === 'ta' ? 'தொடரவும்' : language === 'hi' ? 'आगे बढ़ें' : 'Continue'}</span>
                     <span className="material-symbols-outlined text-sm">arrow_forward</span>
                   </>
                 )}
               </button>
 
-              <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200/80 text-center">
-                <p className="text-xs text-blue-900 font-medium">
-                  🔒 {language === 'ta' ? 'Twilio SMS & நேரடி AI சரிபார்ப்பு' : 'Twilio SMS & Verified Real Authentication'}
+              <div className="p-3 bg-teal-50/80 rounded-xl border border-teal-200/80 text-center">
+                <p className="text-xs text-teal-900 font-medium">
+                  🔒 {language === 'ta' ? 'பாதுகாப்பான & நேரடி AI சரிபார்ப்பு' : language === 'hi' ? 'सुरक्षित और त्वरित सत्यापन' : 'Secure & Instant Authentication'}
                 </p>
               </div>
             </form>

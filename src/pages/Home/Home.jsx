@@ -1,11 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import LanguageWelcomeModal from '../../components/language/LanguageWelcomeModal';
 import { useLanguageContext } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import { translations } from '../../translations';
 
 export default function Home() {
   const navigate = useNavigate();
   const { language } = useLanguageContext();
+  const { profileData } = useAuth();
   const t = (key, fallback) => translations[language]?.[key] || translations['en']?.[key] || fallback || key;
 
   return (
@@ -103,12 +105,66 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Call to Action */}
-      <div className="flex flex-col items-center gap-4 mb-24 z-10 relative">
-        <button onClick={() => navigate('/auth/phone')} className="flex items-center gap-3 px-8 py-4 rounded-xl bg-primary-container text-on-primary font-headline-md text-headline-md hover:bg-primary transition-all duration-300 shadow-[0_4px_20px_rgba(18,53,91,0.2)] hover:shadow-[0_8px_30px_rgba(18,53,91,0.3)] hover:-translate-y-1">
-          {t('home_getStarted', 'Get Started')}
-          <span className="material-symbols-outlined">arrow_forward</span>
-        </button>
+      {/* User Profile Card & Call to Action */}
+      <div className="flex flex-col items-center gap-6 mb-20 z-10 relative w-full max-w-xl">
+        {/* Profile Card if details are present */}
+        {profileData && (profileData.fullName || profileData.skills?.length > 0) && (
+          <div 
+            onClick={() => navigate('/profile')} 
+            className="w-full glass-panel p-5 rounded-2xl border border-secondary/30 bg-surface/80 hover:border-secondary shadow-md transition-all duration-300 cursor-pointer flex items-center justify-between gap-4 text-left group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-container to-secondary text-on-primary flex items-center justify-center font-headline-md font-bold shadow-md">
+                {profileData.fullName ? profileData.fullName.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-headline-md text-primary font-bold group-hover:text-secondary transition-colors">
+                    {profileData.fullName || 'My Profile'}
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-secondary-container text-on-secondary-container">
+                    {profileData.age ? `${profileData.age} yrs` : 'Active'}
+                  </span>
+                </div>
+                <p className="font-body-sm text-on-surface-variant flex items-center gap-1 mt-0.5">
+                  <span className="material-symbols-outlined text-[14px] text-secondary">location_on</span>
+                  {profileData.location || 'Salem, Tamil Nadu'}
+                </p>
+                {/* Skills tags */}
+                {profileData.skills && profileData.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {profileData.skills.slice(0, 4).map((sk) => (
+                      <span key={sk} className="px-2 py-0.5 rounded-md text-[11px] bg-secondary/10 text-secondary font-medium">
+                        {sk}
+                      </span>
+                    ))}
+                    {profileData.skills.length > 4 && (
+                      <span className="text-[11px] text-on-surface-variant font-medium self-center">
+                        +{profileData.skills.length - 4} more
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-secondary font-label-md shrink-0">
+              <span className="hidden sm:inline font-semibold">{t('home_viewProfile', 'View Profile')}</span>
+              <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">chevron_right</span>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <button onClick={() => navigate('/auth/phone')} className="flex items-center gap-3 px-8 py-4 rounded-xl bg-primary-container text-on-primary font-headline-md text-headline-md hover:bg-primary transition-all duration-300 shadow-[0_4px_20px_rgba(18,53,91,0.2)] hover:shadow-[0_8px_30px_rgba(18,53,91,0.3)] hover:-translate-y-1">
+            {t('home_getStarted', 'Get Started')}
+            <span className="material-symbols-outlined">arrow_forward</span>
+          </button>
+          <button onClick={() => navigate('/profile')} className="flex items-center gap-2 px-6 py-4 rounded-xl border-2 border-primary-container/30 bg-surface/80 text-primary-container font-headline-md text-headline-md hover:bg-primary-container/10 transition-all duration-300 shadow-sm">
+            <span className="material-symbols-outlined">person</span>
+            <span>{t('home_myProfile', 'My Profile')}</span>
+          </button>
+        </div>
+
         <div className="flex items-center gap-2 text-on-surface-variant bg-surface-container-low px-4 py-1.5 rounded-full border border-surface-variant">
           <span className="material-symbols-outlined text-sm text-secondary">language</span>
           <span className="font-label-sm text-label-sm">{t('home_voiceGuidanceAvailable', 'Voice guidance available in 10+ languages')}</span>

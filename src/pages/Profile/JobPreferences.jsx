@@ -22,6 +22,7 @@ export default function JobPreferences() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Temporary Form state
+  const [customSkillInput, setCustomSkillInput] = useState('');
   const [tempPrefs, setTempPrefs] = useState({
     skills: [],
     workType: 'Any',
@@ -117,18 +118,55 @@ export default function JobPreferences() {
   };
 
   // Manual Updates
+  const handleAddCustomSkill = () => {
+    const trimmed = customSkillInput.trim();
+    if (!trimmed) return;
+    if (!tempPrefs.skills.includes(trimmed)) {
+      const updatedSkills = [...tempPrefs.skills, trimmed];
+      const updatedPrefs = { ...tempPrefs, skills: updatedSkills };
+      setTempPrefs(updatedPrefs);
+      // Synchronize with active profile data immediately
+      setProfileData(prev => ({
+        ...prev,
+        skills: updatedSkills,
+        jobPreferences: {
+          ...(prev?.jobPreferences || {}),
+          skills: updatedSkills,
+        },
+      }));
+    }
+    setCustomSkillInput('');
+  };
+
   const toggleSkill = (skill) => {
     setTempPrefs(prev => {
       const exists = prev.skills.includes(skill);
-      if (exists) {
-        return { ...prev, skills: prev.skills.filter(s => s !== skill) };
-      }
-      return { ...prev, skills: [...prev.skills, skill] };
+      const updated = exists ? prev.skills.filter(s => s !== skill) : [...prev.skills, skill];
+      setProfileData(p => ({
+        ...p,
+        skills: updated,
+        jobPreferences: {
+          ...(p?.jobPreferences || {}),
+          skills: updated,
+        },
+      }));
+      return { ...prev, skills: updated };
     });
   };
 
   const removeSkill = (skill) => {
-    setTempPrefs(prev => ({ ...prev, skills: prev.skills.filter(s => s !== skill) }));
+    setTempPrefs(prev => {
+      const updated = prev.skills.filter(s => s !== skill);
+      setProfileData(p => ({
+        ...p,
+        skills: updated,
+        jobPreferences: {
+          ...(p?.jobPreferences || {}),
+          skills: updated,
+        },
+      }));
+      return { ...prev, skills: updated };
+    });
   };
 
   const updateField = (field, value) => {
@@ -235,10 +273,39 @@ export default function JobPreferences() {
           
           {/* Skills Section */}
           <section className="bg-surface rounded-xl p-6 shadow-sm border border-surface-container-high transition-colors">
-            <h2 className="font-headline-md text-primary mb-4 flex items-center gap-2">
+            <h2 className="font-headline-md text-primary mb-2 flex items-center gap-2">
               <span className="material-symbols-outlined text-secondary">psychology</span>
-              {t('jobPrefs_skills', 'What skills do you have?')}
+              {t('jobPrefs_skills', 'What are you good at?')}
             </h2>
+            <p className="font-body-sm text-on-surface-variant mb-4">
+              {t('jobPrefs_skillsSubtitle', 'Add skills you know to update your profile and match with relevant jobs.')}
+            </p>
+
+            {/* Custom Skill Input Box */}
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={customSkillInput}
+                onChange={(e) => setCustomSkillInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddCustomSkill();
+                  }
+                }}
+                placeholder={t('jobPrefs_skillPlaceholder', 'Type what you are good at (e.g. Electrical, Cooking)...')}
+                className="flex-1 h-[46px] rounded-lg border border-outline-variant bg-surface-container-lowest px-4 text-on-surface font-body-md focus:outline-none focus:border-secondary transition-colors"
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomSkill}
+                className="px-5 h-[46px] rounded-lg bg-secondary text-on-secondary font-label-md hover:bg-on-secondary-container transition-colors flex items-center gap-1 shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                <span>{t('jobPrefs_addSkill', 'Add')}</span>
+              </button>
+            </div>
+
             <div className="flex flex-wrap gap-2 mb-4">
               {tempPrefs.skills.length === 0 && (
                 <span className="text-on-surface-variant font-body-md italic opacity-70">
@@ -246,7 +313,7 @@ export default function JobPreferences() {
                 </span>
               )}
               {tempPrefs.skills.map((skill) => (
-                <div key={skill} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F0FDFA] border border-[#0F766E] text-[#0F766E] font-label-md animate-fade-in">
+                <div key={skill} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F0FDFA] border border-[#0F766E] text-[#0F766E] font-label-md animate-fade-in shadow-xs">
                   {skill}
                   <button onClick={() => removeSkill(skill)} className="hover:text-primary transition-colors flex items-center justify-center">
                     <span className="material-symbols-outlined text-[16px]">close</span>

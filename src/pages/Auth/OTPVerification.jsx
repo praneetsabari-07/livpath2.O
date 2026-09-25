@@ -236,8 +236,36 @@ export default function OTPVerification() {
               </button>
             </form>
 
+            {/* Realistic SMS Banner Toast simulation for testing with any number */}
+            {phoneData?.demoOtp && (
+              <div 
+                onClick={handleAutoFillDemo}
+                className="mt-5 w-full bg-emerald-50 hover:bg-emerald-100/80 cursor-pointer border border-emerald-300/80 rounded-xl p-3.5 transition-all shadow-xs flex items-center justify-between group"
+                title="Tap to auto-fill code"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                    <span className="material-symbols-outlined text-lg">sms</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-semibold text-emerald-950 flex items-center gap-1.5">
+                      <span>SMS Verification</span>
+                      <span className="text-[10px] bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Live OTP</span>
+                    </p>
+                    <p className="text-xs text-emerald-800">
+                      Code: <strong className="font-mono text-sm tracking-widest text-emerald-900 bg-white/80 px-2 py-0.5 rounded border border-emerald-200">{phoneData.demoOtp}</strong>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-xs font-bold text-emerald-700 group-hover:text-emerald-900">
+                  <span>Auto-fill</span>
+                  <span className="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">bolt</span>
+                </div>
+              </div>
+            )}
+
             {/* Voice Prompt Hint */}
-            <div className="mt-6 flex items-center gap-3 bg-teal-50/80 border border-teal-200/80 p-3 rounded-xl w-full justify-center">
+            <div className="mt-4 flex items-center gap-3 bg-teal-50/80 border border-teal-200/80 p-3 rounded-xl w-full justify-center">
               <span className="material-symbols-outlined text-secondary text-sm">mic</span>
               <span className="font-label-sm text-label-sm text-teal-900 font-semibold">
                 {t('auth_voiceSmsHint') || 'Say "Read code from SMS" to autofill'}

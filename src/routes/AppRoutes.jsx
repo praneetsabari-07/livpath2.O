@@ -30,7 +30,7 @@ export default function AppRoutes() {
       <Route element={<OnboardingLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/auth/phone" element={<PhoneEntry />} />
-        <Route path="/auth/otp" element={<OTPVerification />} />
+        <Route path="/auth/otp" element={<UserDetection />} />
         <Route path="/auth/user-detection" element={<UserDetection />} />
         <Route path="/certificate-verification" element={<CertificateVerification />} />
         <Route path="/personal-details" element={<PersonalDetails />} />
