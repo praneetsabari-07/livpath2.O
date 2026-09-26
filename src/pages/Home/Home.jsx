@@ -1,13 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import LanguageWelcomeModal from '../../components/language/LanguageWelcomeModal';
 import { useLanguageContext } from '../../context/LanguageContext';
-import { useAuth } from '../../context/AuthContext';
 import { translations } from '../../translations';
 
 export default function Home() {
   const navigate = useNavigate();
   const { language } = useLanguageContext();
-  const { profileData } = useAuth();
   const t = (key, fallback) => translations[language]?.[key] || translations['en']?.[key] || fallback || key;
 
   return (
@@ -107,16 +105,10 @@ export default function Home() {
 
       {/* Call to Action */}
       <div className="flex flex-col items-center gap-4 mb-24 z-10 relative">
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <button onClick={() => navigate('/auth/phone')} className="flex items-center gap-3 px-8 py-4 rounded-xl bg-primary-container text-on-primary font-headline-md text-headline-md hover:bg-primary transition-all duration-300 shadow-[0_4px_20px_rgba(18,53,91,0.2)] hover:shadow-[0_8px_30px_rgba(18,53,91,0.3)] hover:-translate-y-1">
-            {t('home_getStarted', 'Get Started')}
-            <span className="material-symbols-outlined">arrow_forward</span>
-          </button>
-          <button onClick={() => navigate('/profile')} className="flex items-center gap-2 px-6 py-4 rounded-xl border-2 border-primary-container/30 bg-surface/80 text-primary-container font-headline-md text-headline-md hover:bg-primary-container/10 transition-all duration-300 shadow-sm">
-            <span className="material-symbols-outlined">person</span>
-            <span>{t('home_myProfile', 'My Profile')}</span>
-          </button>
-        </div>
+        <button onClick={() => navigate('/auth/phone')} className="flex items-center gap-3 px-8 py-4 rounded-xl bg-primary-container text-on-primary font-headline-md text-headline-md hover:bg-primary transition-all duration-300 shadow-[0_4px_20px_rgba(18,53,91,0.2)] hover:shadow-[0_8px_30px_rgba(18,53,91,0.3)] hover:-translate-y-1">
+          {t('home_getStarted', 'Get Started')}
+          <span className="material-symbols-outlined">arrow_forward</span>
+        </button>
 
         <div className="flex items-center gap-2 text-on-surface-variant bg-surface-container-low px-4 py-1.5 rounded-full border border-surface-variant">
           <span className="material-symbols-outlined text-sm text-secondary">language</span>

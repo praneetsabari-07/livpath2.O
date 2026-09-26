@@ -1,6 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
 import NavShell, { NavBrand, VoiceHelpButton, GeminiSkillButton } from './NavShell';
-import LanguageSelector from '../language/LanguageSelector';
 import { useLanguage } from '../../context/LanguageContext';
 
 /**
@@ -63,7 +62,6 @@ export default function MainNavigation() {
 
       <div className="flex items-center gap-2 md:gap-3 shrink-0">
         <GeminiSkillButton />
-        <LanguageSelector />
         <VoiceHelpButton />
       </div>
     </NavShell>
