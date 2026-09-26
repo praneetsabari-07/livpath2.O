@@ -84,8 +84,17 @@ export const saveJobPreferences = async (data) => {
 
 export const updateProfile = async (data) => {
   try {
-    const currentPhone = data.phone || localStorage.getItem(PHONE_STORAGE_KEY) || '9876543210';
+    let existing = {};
+    try {
+      existing = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || '{}');
+    } catch {}
+
+    const currentPhone = data.phone || localStorage.getItem(PHONE_STORAGE_KEY) || existing.phone || '';
+    if (!currentPhone) {
+      return { success: true };
+    }
     const payload = {
+      ...existing,
       ...data,
       phone: currentPhone,
     };

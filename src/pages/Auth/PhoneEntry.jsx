@@ -4,10 +4,11 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useVoiceAssistant } from '../../context/VoiceAssistantContext';
 import { sendOTP, checkUser } from '../../services/authService';
+import { saveUserToSheet } from '../../services/sheetDbService';
 
 export default function PhoneEntry() {
   const navigate = useNavigate();
-  const { setPhoneData, updateProfile, setProfileData, setUser } = useAuth();
+  const { setPhoneData, updateProfile, setProfileData, setUser, setUserPhone } = useAuth();
   const { t, language, setLanguage } = useLanguage();
   const { speak } = useVoiceAssistant();
 
@@ -88,7 +89,10 @@ export default function PhoneEntry() {
         return;
       }
 
-      // 2. New number or verification -> Directly set session and proceed without OTP screen
+      // 2. New number or verification -> Clear any stale session data from previous accounts
+      if (setUserPhone) {
+        setUserPhone(phoneNumber);
+      }
       setPhoneData({
         countryCode: '+91',
         number: phoneNumber,
@@ -99,10 +103,40 @@ export default function PhoneEntry() {
       if (setUser) {
         setUser({
           id: `user-${phoneNumber}`,
-          name: 'LivPath User',
+          name: '',
           phone: phoneNumber,
         });
       }
+      // Reset profile to blank for this new phone session so old accounts don't leak
+      const freshProfile = {
+        fullName: '',
+        phone: phoneNumber,
+        skills: [],
+        location: '',
+        workType: 'Full-time',
+      };
+      if (updateProfile) {
+        updateProfile(freshProfile);
+      }
+      if (setProfileData) {
+        setProfileData({
+          fullName: '',
+          location: '',
+          personalDetails: { fullName: '', age: '', gender: '', location: '', education: '' },
+          jobPreferences: { skills: [], workType: 'Full-time', locationType: 'Near me', specificLocation: '' }
+        });
+      }
+
+      // Automatically register this new phone in SheetDB right now
+      saveUserToSheet({
+        phone: phoneNumber,
+        name: 'New User',
+        skills: [],
+        location: 'Tamil Nadu',
+        workType: 'Full-time',
+        lang: language || 'en',
+      }).catch(err => console.warn('Background registration error:', err));
+
       navigate('/auth/user-detection');
     } catch (error) {
       console.error('Failed to continue with phone:', error);

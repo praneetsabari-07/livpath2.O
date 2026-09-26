@@ -269,6 +269,15 @@ export function AuthProvider({ children }) {
     setIsAuthenticated(false);
     setUser(null);
     setUserPhoneState('');
+    setProfile(DEFAULT_PROFILE);
+    setProfileData(DEFAULT_PROFILE_DATA);
+    try {
+      localStorage.removeItem(PHONE_STORAGE_KEY);
+      localStorage.removeItem(PROFILE_STORAGE_KEY);
+      localStorage.removeItem('livpath_profile_data');
+    } catch (e) {
+      console.warn(e);
+    }
   };
 
   return (
